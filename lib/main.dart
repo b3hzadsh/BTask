@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
                             color:
                                 _submitColor, //TODO change color when its not empty ,dont forgetto setState
                           ),
-                          onPressed: _addTask),
+                          onPressed: _inputController == "" ? () {} : _addTask),
                     ),
                   ),
                 ],
