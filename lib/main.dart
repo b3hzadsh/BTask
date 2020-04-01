@@ -128,16 +128,15 @@ class _MyAppState extends State<MyApp> {
                                   color: Colors.yellow,
                                 )
                               : Icon(Icons.star_border),
-                          onPressed: () {
-                            setState(() async {
-                              item.blocked = true;
-                              Client needVip = Client(
-                                  id: item.id,
-                                  firstName: item.firstName,
-                                  blocked: true);
-                              await DBProvider.db
-                                  .updateClient(needVip, "Client");
+                          onPressed: () async {
+                            setState(() {
+                              item.blocked = item.blocked == false;
                             });
+                            Client needVip = Client(
+                                id: item.id,
+                                firstName: item.firstName,
+                                blocked: true);
+                            await DBProvider.db.updateClient(needVip, "Client");
                           }),
                     ),
                   );
