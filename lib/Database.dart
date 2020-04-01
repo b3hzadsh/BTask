@@ -28,77 +28,85 @@ class DBProvider {
       await db.execute("CREATE TABLE Client ("
           "id INTEGER PRIMARY KEY,"
           "first_name TEXT,"
-          /*   "last_name TEXT,"*/
           "blocked BIT"
           ")");
     });
   }
 
-  newClient(Client newClient) async {
+  newClient(Client newClient, String tableName) async {
     final db = await database;
     //get the biggest id in the table
-    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM Client");
+    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM $tableName");
     int id = table.first["id"];
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into Client (id,first_name,blocked)"
+        "INSERT Into $tableName (id,first_name,blocked)"
         " VALUES (?,?,?)",
         [id, newClient.firstName, newClient.blocked]);
     return raw;
   }
 
-  blockOrUnblock(Client client) async {
+  blockOrUnblock(Client client, String tableName) async {
     final db = await database;
     Client blocked = Client(
         id: client.id,
         firstName: client.firstName,
         // lastName: client.lastName,
         blocked: !client.blocked);
-    var res = await db.update("Client", blocked.toMap(),
+    var res = await db.update(tableName, blocked.toMap(),
         where: "id = ?", whereArgs: [client.id]);
     return res;
   }
 
-  updateClient(Client newClient) async {
+  updateClient(Client newClient, String tableName) async {
     final db = await database;
-    var res = await db.update("Client", newClient.toMap(),
+    var res = await db.update(tableName, newClient.toMap(),
         where: "id = ?", whereArgs: [newClient.id]);
     return res;
   }
 
-  getClient(int id) async {
+  getClient(int id, String tableName) async {
     final db = await database;
-    var res = await db.query("Client", where: "id = ?", whereArgs: [id]);
+    var res = await db.query(tableName, where: "id = ?", whereArgs: [id]);
     return res.isNotEmpty ? Client.fromMap(res.first) : null;
   }
 
-  Future<List<Client>> getBlockedClients() async {
+  Future<List<Client>> getBlockedClients(String tableName) async {
     final db = await database;
 
     print("works");
     // var res = await db.rawQuery("SELECT * FROM Client WHERE blocked=1");
-    var res = await db.query("Client", where: "blocked = ? ", whereArgs: [1]);
+    var res = await db.query(tableName, where: "blocked = ? ", whereArgs: [1]);
 
     List<Client> list =
         res.isNotEmpty ? res.map((c) => Client.fromMap(c)).toList() : [];
     return list;
   }
 
-  Future<List<Client>> getAllClients() async {
+  Future<List<Client>> getAllClients(String tableName) async {
     final db = await database;
-    var res = await db.query("Client");
+    var res = await db.query(tableName);
     List<Client> list =
         res.isNotEmpty ? res.map((c) => Client.fromMap(c)).toList() : [];
     return list;
   }
 
-  deleteClient(int id) async {
+  deleteClient(int id, String tableName) async {
     final db = await database;
-    return db.delete("Client", where: "id = ?", whereArgs: [id]);
+    return db.delete(tableName, where: "id = ?", whereArgs: [id]);
   }
 
-  deleteAll() async {
+  deleteAll(String tableName) async {
     final db = await database;
-    db.rawDelete("Delete  from Client", []);
+    db.rawDelete("Delete  from $tableName", []);
+  }
+
+  addTable(String tableName) async {
+    final db = await database;
+    await db.execute("CREATE TABLE $tableName ("
+        "id INTEGER PRIMARY KEY,"
+        "first_name TEXT,"
+        "blocked BIT"
+        ")");
   }
 }

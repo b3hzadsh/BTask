@@ -21,6 +21,7 @@ class _MyAppState extends State<MyApp> {
   bool _showBottomNavigator = false;
   bool _inputFocus = true;
   Color _submitColor = Colors.grey;
+  // for task ui widget
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +91,7 @@ class _MyAppState extends State<MyApp> {
           : null,
       appBar: AppBar(
         title: Text(
-          "Inbox",
+          "Inbox", //TODO must be the table name given from constructor
           style: TextStyle(
             color: Color.fromRGBO(230, 230, 235, 1.0),
           ),
@@ -100,7 +101,7 @@ class _MyAppState extends State<MyApp> {
       body: Container(
         color: Color.fromRGBO(37, 46, 56, 1.0),
         child: FutureBuilder<List<Client>>(
-          future: DBProvider.db.getAllClients(),
+          future: DBProvider.db.getAllClients("Client"),
           builder:
               (BuildContext context, AsyncSnapshot<List<Client>> snapshot) {
             if (snapshot.hasData) {
@@ -112,7 +113,7 @@ class _MyAppState extends State<MyApp> {
                     key: UniqueKey(), // TODO what is unique key?
                     background: Container(color: Colors.red),
                     onDismissed: (_) {
-                      DBProvider.db.deleteClient(item.id);
+                      DBProvider.db.deleteClient(item.id, "Client");
                     },
                     child: ListTile(
                       title: Text(
@@ -120,17 +121,24 @@ class _MyAppState extends State<MyApp> {
                         style:
                             TextStyle(color: Color.fromRGBO(173, 37, 46, 1.0)),
                       ),
-                      leading: Text(
-                        item.id.toString(),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      trailing: Checkbox(
-                        onChanged: (bool value) {
-                          DBProvider.db.blockOrUnblock(item);
-                          setState(() {});
-                        },
-                        value: item.blocked,
-                      ),
+                      trailing: IconButton(
+                          icon: item.blocked
+                              ? Icon(
+                                  Icons.star,
+                                  color: Colors.yellow,
+                                )
+                              : Icon(Icons.star_border),
+                          onPressed: () {
+                            setState(() async {
+                              item.blocked = true;
+                              Client needVip = Client(
+                                  id: item.id,
+                                  firstName: item.firstName,
+                                  blocked: true);
+                              await DBProvider.db
+                                  .updateClient(needVip, "Client");
+                            });
+                          }),
                     ),
                   );
                 },
@@ -147,9 +155,7 @@ class _MyAppState extends State<MyApp> {
               onPressed: () {
                 _showBottomNavigator = true;
                 _inputFocus = true;
-                // DBProvider.db.deleteAll(); //TODO remove
-                /*  Client rnd = testClients[math.Random().nextInt(testClients.length)];
-          await DBProvider.db.newClient(rnd); */
+
                 setState(() {});
               },
             )
@@ -160,9 +166,10 @@ class _MyAppState extends State<MyApp> {
   void _addTask({String x}) async {
     if (_inputController.text != "") {
       Client x = Client(firstName: _inputController.text, blocked: false);
-      await DBProvider.db.newClient(x);
-      _inputController.clear();
-      setState(() {});
+      await DBProvider.db.newClient(x, "Client");
+      setState(() {
+        _inputController.clear();
+      });
     }
   }
 }
