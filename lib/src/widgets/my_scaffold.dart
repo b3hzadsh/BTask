@@ -88,7 +88,9 @@ class _MyScffoldState extends State<MyScffold> {
                 },
               );
             } else {
-              return Center(child: CircularProgressIndicator());
+              return Center(
+                child: CircularProgressIndicator(),
+              );
             }
           },
         ),
