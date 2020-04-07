@@ -25,11 +25,27 @@ class DBProvider {
     String path = join(documentsDirectory.path, "TestDB.db");
     return await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
+      bool xBool = true;
       await db.execute("CREATE TABLE Client ("
           "id INTEGER PRIMARY KEY,"
           "first_name TEXT,"
           "blocked BIT"
           ")");
+      await db.execute("CREATE TABLE Tables__ ("
+          "id INTEGER PRIMARY KEY,"
+          "first_name TEXT," // tablename
+          "blocked BIT" //main project
+          ")");
+      /* await db.execute("""
+           INSERT INTO Tables__ (id , first_name, blocked)
+           VALUES (1,'Client' , 1);"""); */
+      await db.rawInsert(
+          "INSERT Into Tables__ (id,first_name,blocked)"
+          " VALUES (?,?,?)",
+          [1, "Client", xBool]);
+
+      /* newClient(Client(blocked: false, firstName: "Client"), "Tables__");
+      newClient(Client(blocked: true, firstName: "first task"), "Client"); */
     });
   }
 
@@ -102,11 +118,23 @@ class DBProvider {
   }
 
   addTable(String tableName) async {
-    final db = await database;
-    await db.execute("CREATE TABLE $tableName ("
-        "id INTEGER PRIMARY KEY,"
-        "first_name TEXT,"
-        "blocked BIT"
-        ")");
+    if (tableName != "Tables__") {
+      final db = await database;
+      await db.execute("CREATE TABLE $tableName ("
+          "id INTEGER PRIMARY KEY,"
+          "first_name TEXT,"
+          "blocked BIT"
+          ")");
+      await newClient(Client(blocked: true, firstName: tableName), "Tables__");
+    }
+  }
+
+  removeTable(String tableName) async {
+    if (tableName != "Client" && tableName != "Tables__") {
+      final db = await database;
+      await db.execute("DROP TABLE IF EXISTS $tableName");
+      return db
+          .delete("Tables__", where: "first_name = ?", whereArgs: [tableName]);
+    }
   }
 }
